@@ -18,8 +18,12 @@ import java.util.Map;
 @Slf4j
 @RestController
 public class UserRestImpl implements UserRest {
-    @Autowired
+    final
     UserService userService;
+
+    public UserRestImpl(UserService userService) {
+        this.userService = userService;
+    }
 
     @Override
     public ResponseEntity<String> signup(Map<String, String> requestMap) {
