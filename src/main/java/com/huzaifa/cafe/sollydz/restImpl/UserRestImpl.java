@@ -1,12 +1,12 @@
 package com.huzaifa.cafe.sollydz.restImpl;
 
 import com.huzaifa.cafe.sollydz.constants.CafeConstants;
+import com.huzaifa.cafe.sollydz.jwt.JwtFilter;
 import com.huzaifa.cafe.sollydz.rest.UserRest;
 import com.huzaifa.cafe.sollydz.service.UserService;
 import com.huzaifa.cafe.sollydz.utils.CafeUtil;
 import com.huzaifa.cafe.sollydz.wrapper.UserWrapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,11 +18,12 @@ import java.util.Map;
 @Slf4j
 @RestController
 public class UserRestImpl implements UserRest {
-    final
-    UserService userService;
+    final UserService userService;
+    final JwtFilter jwtFilter;
 
-    public UserRestImpl(UserService userService) {
+    public UserRestImpl(UserService userService, JwtFilter jwtFilter) {
         this.userService = userService;
+        this.jwtFilter = jwtFilter;
     }
 
     @Override
@@ -56,13 +57,13 @@ public class UserRestImpl implements UserRest {
     }
 
     @Override
-    public ResponseEntity<String> update(Map<String, String> requestMap) {
-        try{
-            log.info("user request:",requestMap);
-            userService.updateData(requestMap);
-        }catch (Exception e){
-            e.printStackTrace();
+    public ResponseEntity<String> updateData(Map<String,String> requestMap) {
+        try {
+            log.info("User request: {}", requestMap);
+            return userService.updateData(requestMap);
+        } catch (Exception e) {
+            log.error("Error while updating user data", e);
+            return CafeUtil.getResponseEntity(CafeConstants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return CafeUtil.getResponseEntity(CafeConstants.SOMETHING_WENT_WRONG,HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

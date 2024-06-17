@@ -16,6 +16,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -96,11 +97,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public ResponseEntity<String> updateData(Map<String, String> requestMap) {
         try{
             if (jwtFilter.isAdmin()){
                 Optional<User> optional = userDao.findById(Integer.parseInt(requestMap.get("id")));
-                if (optional.isPresent()){
+                if (!optional.isEmpty()){
                     log.info("User: ",optional);
                     userDao.updateStatus(requestMap.get("status"),Integer.parseInt(requestMap.get("id")));
                     return CafeUtil.getResponseEntity("User status updated successfully....!",HttpStatus.OK);
