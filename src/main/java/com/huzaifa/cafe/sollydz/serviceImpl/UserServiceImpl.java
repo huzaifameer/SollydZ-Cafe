@@ -8,6 +8,7 @@ import com.huzaifa.cafe.sollydz.jwt.JwtUtil;
 import com.huzaifa.cafe.sollydz.pojo.User;
 import com.huzaifa.cafe.sollydz.service.UserService;
 import com.huzaifa.cafe.sollydz.utils.CafeUtil;
+import com.huzaifa.cafe.sollydz.utils.EmailUtils;
 import com.huzaifa.cafe.sollydz.wrapper.UserWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -28,13 +29,15 @@ public class UserServiceImpl implements UserService {
     final AuthenticationManager authenticationManager;
     final CustomerUserDetailsService customerUserDetailsService;
     final JwtFilter jwtFilter;
+    final EmailUtils emailUtils;
 
-    public UserServiceImpl(CustomerUserDetailsService customerUserDetailsService, UserDao userDao, JwtUtil jwtUtil, AuthenticationManager authenticationManager, JwtFilter jwtFilter) {
+    public UserServiceImpl(CustomerUserDetailsService customerUserDetailsService, UserDao userDao, JwtUtil jwtUtil, AuthenticationManager authenticationManager, JwtFilter jwtFilter, EmailUtils emailUtils) {
         this.customerUserDetailsService = customerUserDetailsService;
         this.userDao = userDao;
         this.jwtUtil = jwtUtil;
         this.authenticationManager = authenticationManager;
         this.jwtFilter = jwtFilter;
+        this.emailUtils = emailUtils;
     }
 
     @Override
@@ -103,8 +106,8 @@ public class UserServiceImpl implements UserService {
             if (jwtFilter.isAdmin()){
                 Optional<User> optional = userDao.findById(Integer.parseInt(requestMap.get("id")));
                 if (!optional.isEmpty()){
-                    log.info("User: ",optional);
                     userDao.updateStatus(requestMap.get("status"),Integer.parseInt(requestMap.get("id")));
+                    sendMailToAllAdmins(requestMap.get("status"),optional.get().getEmail(),userDao.getAllAdmins());
                     return CafeUtil.getResponseEntity("User status updated successfully....!",HttpStatus.OK);
                 }else {
                     return CafeUtil.getResponseEntity("User ID Doesn't exist",HttpStatus.OK);
@@ -116,6 +119,15 @@ public class UserServiceImpl implements UserService {
             e.printStackTrace();
         }
         return CafeUtil.getResponseEntity(CafeConstants.SOMETHING_WENT_WRONG,HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    private void sendMailToAllAdmins(String status, String user, List<String> allAdmins) {
+        allAdmins.remove(jwtFilter.getCurrentUser());
+        if (status!=null && status.equalsIgnoreCase("true")){
+            emailUtils.sendSimpleMessage(jwtFilter.getCurrentUser(), "Account Approved","USER:- "+user+" \n is approved by \n ADMIN:- "+jwtFilter.getCurrentUser(),allAdmins);
+        }else {
+            emailUtils.sendSimpleMessage(jwtFilter.getCurrentUser(), "Account Disabled","USER:- "+user+" \n is disabled by \n ADMIN:- "+jwtFilter.getCurrentUser(),allAdmins);
+        }
     }
 
     private boolean validateSignupMap(Map<String, String> requestMap){

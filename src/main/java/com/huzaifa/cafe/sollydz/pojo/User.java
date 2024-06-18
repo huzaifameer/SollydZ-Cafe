@@ -9,6 +9,7 @@ import java.io.Serializable;
 
 @NamedQuery(name = "User.findByEmailId",query = "SELECT u from User u WHERE u.email = :email")
 @NamedQuery(name = "User.getAllUsers", query = "SELECT new com.huzaifa.cafe.sollydz.wrapper.UserWrapper(u.id,u.name,u.email,u.contactNumber,u.status) from User u where u.role='user'")
+@NamedQuery(name = "User.getAllAdmins", query = "SELECT u.email from User u where u.role='admin'")
 //@NamedQuery(name = "User.updateStatus", query = "update User u set  u.status=:status where u.id=:id")
 
 @Entity
